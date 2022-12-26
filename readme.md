@@ -1,4 +1,10 @@
-# Three.js Starter
+YouTube (beginning with #3/1): https://www.youtube.com/watch?v=UNvoDucprRE&list=PL0XYm8bdyeFDGJmFeHDiEXsmLfq3vWBaj
+
+# Three.js 3D onscroll events (Mandalorian helmet rotation)
+
+More info: https://three.inverser.pro
+
+I use it:
 Courtesy of Bruno Simon of https://threejs-journey.xyz/
 
 ## Setup
