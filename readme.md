@@ -1,6 +1,6 @@
-YouTube (beginning with #3/1): https://www.youtube.com/watch?v=UNvoDucprRE&list=PL0XYm8bdyeFDGJmFeHDiEXsmLfq3vWBaj
-
 # Three.js 3D onscroll events (Mandalorian helmet rotation)
+
+YouTube (beginning with #3/1): [go to YouTube](https://www.youtube.com/watch?v=UNvoDucprRE&list=PL0XYm8bdyeFDGJmFeHDiEXsmLfq3vWBaj "go to YouTube")
 
 More info: https://three.inverser.pro
 
