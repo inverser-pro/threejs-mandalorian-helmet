@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreeJS Starter</title>
+    <link rel="stylesheet" data-href="/css/css.css">
+</head>
+<body>
+    <canvas class="webgl"></canvas>
+    <nav class="pr z2">
+        <ul class="fx fsa jc">
+            <li><a href="#" data-where="main">Main</a></li>
+            <li><a href="#" data-where="about">About</a></li>
+            <li><a href="#" data-where="services">Services</a></li>
+            <li><a href="#" data-where="feedback">Feedback</a></li>
+            <li><a href="#" data-where="contacts">Contacts</a></li>
+        </ul>
+    </nav>
+    <main>
+        <section class="wh1 fx jc ac to-main">
+            <div class="fx ac jc">
+                <img data-src="/imgs/logo.png" alt="logo" width="360">
+                <h1>ThreeJS Lessons</h1>
+            </div>
+        </section>
+        <section class="wh1 fx ac to-about">
+            <div class="fx ac jc gap3 p_l">
+                <h2>About</h2>
+                <p class="fb50">Lorem ipsum dolor sit amet consectetur adipisicing elit. Quaerat aperiam molestiae natus vitae a molestias, magnam in ullam qui tenetur, beatae quia, numquam quos eius nostrum dolores! Ipsum, expedita nesciunt. Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eaque consequuntur in voluptatibus possimus dolorum magnam, id aliquam quo iste debitis voluptates pariatur laudantium? Error nulla atque et sit tempore illum?</p>
+            </div>
+        </section>
+        <section class="wh1 fx ac to-services">
+            <div class="fx ac jc gap3 p_r">
+                <p class="fb50">Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla veniam maiores quibusdam, consectetur numquam totam animi nobis fugiat dolorum quod ea modi esse, eligendi omnis, eos consequuntur tempora eius itaque? Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut, et.</p>
+                <h2>Services</h2>
+            </div>
+        </section>
+        <section class="wh1 fx jc ac to-feedback">
+            <div class="fx ac jc gap3 p_l mwwa">
+                <h2>Feedback</h2>
+                <form class="fb40">
+                      <div class="fx fdc mb1 mv60">
+                        <span>Name</span>
+                        <input placeholder="Fill your name" minLength="2" maxLength="30" type="text" name="name" class="cf"/>
+                        <small>required</small>
+                      </div>
+                      <div class="fx fdc mb1 mv60">
+                        <span>Phone</span>
+                        <input placeholder="Fill your phone number" minLength="10" maxLength="40" type="tel" name="tel" class="cf"/>
+                        <small>required</small>
+                      </div>
+                      <button class="pr fx ac tu btn br c0 btnClick" type="submit">Send</button>
+                </form>
+            </div>
+        </section>
+        <section class="wh1 fx jc ac bg to-contacts">
+            <div class="fx ac jc gap3 p_r">
+                <div class="fb50">
+                    <span>Phone: +0 000 000-00-00</span>
+                    <br><span>Email: 00@123.pro</span>
+                    <br><span>Address:&nbsp;<address class="in">www three js location</address></span>
+                </div>
+                <h2>Contacts</h2>
+            </div>
+        </section>
+    </main>
+    <script>
+        (()=>{
+            const d=document;
+            const a=e=>d.querySelectorAll(e);
+            const s=e=>(d.querySelector(e))?d.querySelector(e):null;
+            const loadRes=a("[data-src]"),
+                  loadResHref=a("[data-href]");
+            //d.body.classList.add('ovh')
+            function loadResource(res,type){
+                if(res&&res.length&&res.length>0){res.forEach(e => {
+                    e[type]=e.dataset[type]
+                })}
+            }
+
+            loadResource(loadRes,'src');
+            loadResource(loadResHref,'href')
+
+            //if(loadRes&&loadRes.length&&loadRes.length>0){loadRes.forEach(e => e.src=e.dataset.src)}
+            //if(loadResHref&&loadResHref.length&&loadResHref.length>0){loadResHref.forEach(e => e.href=e.dataset.href)}
+        })()
+    </script>
+</body>
+</html>
