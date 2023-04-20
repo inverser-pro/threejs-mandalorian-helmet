@@ -7,6 +7,10 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 import animejs from 'animejs/lib/anime.es.js'
 //import * as dat from 'dat.gui'
 
+// HDR map
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
+import {VolumetricMatrial} from './threex.volumetricspotlightmaterial'
+
 // Debug
 //const gui = new dat.GUI()
 "use strict";
@@ -18,6 +22,7 @@ const scene = new THREE.Scene()
 
 const sceneData=Object.create({
     model:'/models/Mandalorean.glb',
+    hdr:'/hdr/softly_gray.hdr', // HDR map
 })
 
 // Objects
@@ -29,7 +34,8 @@ scene.add(sphere) */
 
 // CODE
 let percentToScreens=330,
-    pl=null;
+    pl=null,
+    matForLight;
 if(window.innerWidth<1025){//MOBILE
     // camera.position.set(0, 0, 3.2);
     percentToScreens=400
@@ -45,15 +51,50 @@ const loader = new GLTFLoader(),
       screenConst=parseInt(window.getComputedStyle(d.body).height)/ 45 //percentToScreens;//100/7 ( 7 = screens.length);
       // console.log(screenConst);
 function lerp(x, y, a) {return (1 - a) * x + a * y}
+// HDR map
+const hdrEquirect = new RGBELoader().load(
+    sceneData.hdr,
+    () => hdrEquirect.mapping = THREE.EquirectangularReflectionMapping
+);
+// \ HDR map
 dracoLoader.setDecoderPath('/js/libs/draco/'); // use a full url path
 loader.setDRACOLoader(dracoLoader);
 loader.load(
     sceneData.model,// Manda
     gltf=>{
+
         const sceneGlb=gltf.scene,
               animationScripts = [{ start:0, end:0, func:0 }];
-        //console.log(sceneGlb);
         sceneGlb.scale.set(.05,.05,.05)
+
+        // Add volumetric light
+        const cylForLight=new THREE.CylinderGeometry( .01, 2.7, 10, 64, 80, true);
+        console.log(cylForLight.parameters);
+        cylForLight.scale(10,10,10)
+        cylForLight.translate( 0, 32, 15.5 );
+        //cylForLight.rotateX( -Math.PI / 2 );
+        matForLight	= VolumetricMatrial()
+        const meshForLight	= new THREE.Mesh( cylForLight, matForLight);
+        meshForLight.position.set(1,2.1,.2)
+        //meshForLight.lookAt(sceneGlb.position.x+.1,sceneGlb.position.y+.7,sceneGlb.position.z)
+        //meshForLight.lookAt(sceneGlb.position.x-.25,sceneGlb.position.y,sceneGlb.position.z)
+        matForLight.uniforms.lightColor.value.set(0xffffff)
+        matForLight.uniforms.spotPosition.value	= meshForLight.position
+        matForLight.uniforms.anglePower.value=10.
+        matForLight.uniforms.attenuation.value=2.7
+        matForLight.uniforms.yy.value=.2
+        //matForLight.uniforms.rotationY.value=mesh.rotation.y
+        matForLight.uniforms.need.value=1.1
+        //matForLight.uniforms.attenuation.value=3.
+        sceneGlb.add( meshForLight );
+
+        /* sceneGlb.add( 
+            new THREE.Mesh(
+                cylForLight,
+                new THREE.MeshBasicMaterial({opacity:.5,transparent:true})
+            )
+         ) */
+        // \ Add volumetric light
         scene.add(sceneGlb)
 
         sceneGlb.rotation.set(-.21,0,0)
@@ -101,7 +142,7 @@ loader.load(
                 sceneGlb.rotation.set(-.21,lerp(.6, -1.2, scalePercent(tmp3scr, tmp4scr)),0)
             },
         });
-        animationScripts.push({// 4 screen
+        animationScripts.push({// 5 screen
             start: tmp4scr,
             end: tmp5scr,
             func: () => {
@@ -113,10 +154,19 @@ loader.load(
                 sceneGlb.rotation.set(-.21,lerp(-1.2, -1.8, scalePercent(tmp4scr, tmp5scr)),0)
             },
         });
+
+        animationScripts.push({
+            start: tmp5scr,
+            end: 101,
+            func: () => {
+                scalePercent(tmp5scr, 101)
+            }
+        })
+
         pl=()=>{
             //if(oldScrollPercent<scrollPercent){oldScrollPercent=scrollPercent}
             animationScripts.forEach(a=>{
-                if (scrollPercent >= a.start && scrollPercent < a.end) {
+                if (oldScrollPercent >= a.start && oldScrollPercent < a.end) {
                     /* if(typeof func==='function') */a.func();
                     //console.log(777);
                 }
@@ -125,6 +175,7 @@ loader.load(
 
         // sceneGlb.children[0].children[0].receiveShadow=true
         // sceneGlb.children[0].children[0].castShadow=true
+
 
         for(const el in sceneGlb.children[0].children){
             //sceneGlb.children[0].children[el].receiveShadow=true
@@ -143,11 +194,22 @@ loader.load(
                 mesh.material.color=new THREE.Color(0x1c1810)
                 mesh.material.roughness=.4
                 mesh.material.metalness=.5
+
+                // HDR map
+                mesh.material.envMapIntensity=.8
+                mesh.material.envMap = hdrEquirect
+                // \ HDR map
+
             }
             if(mesh.name==='New_object_5'){
                 mesh.material.color=new THREE.Color(0x000000)
                 mesh.material.roughness=.1
                 mesh.material.metalness=.9
+
+                // HDR map
+                mesh.material.envMapIntensity=1
+                mesh.material.envMap = hdrEquirect
+                // \ HDR map
             }
             // mesh.material.color=new THREE.Color(0x1c1810)
             // mesh.material.envMapIntensity=.8
@@ -158,11 +220,11 @@ loader.load(
         }
 
         let scrollPercent =0, oldScrollPercent = 0, old2=0;
-        function scalePercent(start, end) {
-            return (scrollPercent - start) / (end - start)
-        }
         /* function scalePercent(start, end) {
-            let howTo=.04;
+            return (scrollPercent - start) / (end - start)
+        } */
+        function scalePercent(start, end) {
+            let howTo=.06;
             if(scrollPercent<0)scrollPercent=0
             if(scrollPercent>99)scrollPercent=99
             if(Math.abs(old2-scrollPercent)>10){
@@ -184,7 +246,7 @@ loader.load(
                 old2=scrollPercent
             }
             return (oldScrollPercent - start) / (end - start)
-        }; */
+        };
 
         /* JFT */
         const style=d.createElement('style');
@@ -230,11 +292,11 @@ loader.load(
     //    })
         // \ Helmet Rotation
         // floor
-        const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100), new THREE.MeshStandardMaterial({color:0x333333,side: THREE.DoubleSide,}))
+        /* const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100), new THREE.MeshStandardMaterial({color:0x333333,side: THREE.DoubleSide,}))
         floor.rotateX(-Math.PI/2)
         floor.position.set(0,-.45,0)
         floor.receiveShadow = true;
-        scene.add(floor)
+        scene.add(floor) */
         // \ floor
         /////////////   \\\ LESS 2 
 
