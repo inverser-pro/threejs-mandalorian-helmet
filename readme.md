@@ -4,8 +4,6 @@ YouTube (beginning with #3/1): [go to YouTube](https://www.youtube.com/watch?v=U
 
 More info: https://three.inverser.pro
 
-I use it:
-Courtesy of Bruno Simon of https://threejs-journey.xyz/
 
 ## Setup
 Download [Node.js](https://nodejs.org/en/download/).
