@@ -57,7 +57,7 @@ const hdrEquirect = new RGBELoader().load(
     () => hdrEquirect.mapping = THREE.EquirectangularReflectionMapping
 );
 // \ HDR map
-dracoLoader.setDecoderPath('/js/libs/draco/'); // use a full url path
+dracoLoader.setDecoderPath('/js/libs/draco-new/'); // use a full url path
 loader.setDRACOLoader(dracoLoader);
 loader.load(
     sceneData.model,// Manda
