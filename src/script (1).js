@@ -60,10 +60,6 @@ const hdrEquirect = new RGBELoader().load(
 // \ HDR map
 dracoLoader.setDecoderPath('/js/libs/draco-new/'); // use a full url path
 loader.setDRACOLoader(dracoLoader);
-
-// Shader material for pseudoLines
-//const shaderMaterial=[]
-// \ Shader material for pseudoLines
 loader.load(
     sceneData.model,// Manda
     gltf=>{
@@ -91,12 +87,21 @@ loader.load(
         matForLight.uniforms.need.value=1.1
         //matForLight.uniforms.attenuation.value=3.
         sceneGlb.add( meshForLight );
+
+        /* sceneGlb.add( 
+            new THREE.Mesh(
+                cylForLight,
+                new THREE.MeshBasicMaterial({opacity:.5,transparent:true})
+            )
+         ) */
         // \ Add volumetric light
         scene.add(sceneGlb)
 
         sceneGlb.rotation.set(-.21,0,0)
         sceneGlb.position.set(0,-.49,0)
+
         //animejs({targets:sceneGlb.position,z:[-4,0],duration,delay:2e3,easing})
+
         const tmp2scr=screenConst,// 2 screen
               tmp3scr=screenConst*1.8,// 3 screen
               tmp4scr=screenConst*2.8,// 4 screen
@@ -149,6 +154,7 @@ loader.load(
                 sceneGlb.rotation.set(-.21,lerp(-1.2, -1.8, scalePercent(tmp4scr, tmp5scr)),0)
             },
         });
+
         animationScripts.push({
             start: tmp5scr,
             end: 101,
@@ -158,42 +164,20 @@ loader.load(
         })
 
         pl=()=>{
-            animationScripts.forEach(a=>{
-                if (oldScrollPercent >= a.start && oldScrollPercent < a.end) {
-                a.func();
-                }
-            })
+            //if(oldScrollPercent<scrollPercent){oldScrollPercent=scrollPercent}
+            if(oldScrollPercent){
+                animationScripts.forEach(a=>{
+                    if (oldScrollPercent >= a.start && oldScrollPercent < a.end) {
+                    /* if(typeof func==='function') */a.func();
+                    //console.log(777);
+                    }
+                })
+            }
         }
+
         // sceneGlb.children[0].children[0].receiveShadow=true
         // sceneGlb.children[0].children[0].castShadow=true
 
-
-                // обрезаем анимированные линии
-                //
-                renderer.localClippingEnabled = true;
-                // \
-                const clipPlanes = [
-                    new THREE.Plane( new THREE.Vector3( .8, 0, 0 ),1),
-                    new THREE.Plane( new THREE.Vector3( -.8, 0, 0 ),1),
-                    // new THREE.Plane( new THREE.Vector3( 0, 0, .8 ),1),
-                    // new THREE.Plane( new THREE.Vector3( .8, 0, .8 ),1),
-                    //new THREE.Plane( new THREE.Vector3( -.8, 0, .8 ),1),
-                    new THREE.Plane( new THREE.Vector3( 0, 0, -.8 ),3),
-                    //new THREE.Plane( new THREE.Vector3( .8, 0, -.8 ),1),
-                    //new THREE.Plane( new THREE.Vector3( -.8, 0, -.8 ),1),
-                ];
-                const helpers = new THREE.Group();
-                helpers.add( new THREE.PlaneHelper( clipPlanes[0], 5, 0xff0000 ) );
-                helpers.add( new THREE.PlaneHelper( clipPlanes[1], 5, 0xcccccc ) );
-                helpers.add( new THREE.PlaneHelper( clipPlanes[2], 5, 0x0086ff ) );
-                //helpers.add( new THREE.PlaneHelper( clipPlanes[3], 5, 0xffff00 ) );
-                //helpers.add( new THREE.PlaneHelper( clipPlanes[4], 5, 0x00ffff ) );
-                //helpers.add( new THREE.PlaneHelper( clipPlanes[5], 5, 0x00ff00 ) );
-                //helpers.add( new THREE.PlaneHelper( clipPlanes[6], 5, 0xffff00 ) );
-                //helpers.add( new THREE.PlaneHelper( clipPlanes[7], 5, 0x00ffff ) );
-                //console.log(helpers);
-                helpers.visible = false;
-                scene.add( helpers );
 
         for(const el in sceneGlb.children[0].children){
             //sceneGlb.children[0].children[el].receiveShadow=true
@@ -212,6 +196,7 @@ loader.load(
                 mesh.material.color=new THREE.Color(0x1c1810)
                 mesh.material.roughness=.4
                 mesh.material.metalness=.5
+
                 // HDR map
                 mesh.material.envMapIntensity=.8
                 mesh.material.envMap = hdrEquirect
@@ -219,160 +204,81 @@ loader.load(
 
             }
             if(mesh.name==='New_object_5'){ // Glass
-                function getRandomFloat(min, max) {
-                    return Math.random() * (max - min) + min
-                };
+                //mesh.material.color=new THREE.Color(0x000000)
+                //mesh.material.roughness=.1
+                //mesh.material.metalness=.9
+
+                // HDR map
+                //mesh.material.envMapIntensity=1
+                //mesh.material.envMap = hdrEquirect
+                // \ HDR map
+
+
                 const material = new THREE.MeshPhysicalMaterial({
-                    roughness: .05,
-                    transmission: 1,
-                    thickness: 1.4,
+                    roughness: .1,
+                    transmission: .9,
+                    thickness: 3.4,
                     metalness: .2,
-                    //color:0x2c2c2c,
-                    color:0xffffff,
-                    sheen:0,
+                    color:0x2c2c2c,
+                    sheen:1,
                     sheenColor:0x000000,
                     sheenRoughness:.2,
                     ior:1.9,
                     envMap: hdrEquirect,
                     envMapIntensity:1,
                     // wireframe:true,
+
                 });
                 mesh.material=material;
+                console.log(mesh);
                 let i=0;
-                const grp=new THREE.Group(),
-                      forMemory=[];
-                // проходим по всему массиву точек стекла шлема
-                //  ЭТО СЛИШКОМ НАПРЯЖНАЯ ОПЕРАЦИЯ. ЛЕГЧЕ УБРАТЬ ЛИШНИЕ ТОЧКИ В САМОЙ МОДЕЛИ. НО МНЕ ЛЕНЬ
-                while(mesh.geometry.attributes.position.count*3>i){
-                    // позиция каждой точки стекла шлема
-                    const x=mesh.geometry.attributes.position.array[i++],
-                          y=mesh.geometry.attributes.position.array[i++],
-                          z=mesh.geometry.attributes.position.array[i++];
-                    
-                    // рабочий код
-                    const hgt=getRandomFloat(1,2),
-                            pseudoLines=new THREE.Mesh(
-                            new THREE.CylinderGeometry(.01,.01,hgt,6),
-                            //shaderForThisLine
-                            new THREE.MeshBasicMaterial({
-                                color:0xffffff,
-                                side:THREE.DoubleSide,
-                                clippingPlanes: clipPlanes,
-                                clipIntersection: false
-                            })
-                        );
-                    pseudoLines.rotateX(Math.PI/-1.0)
-                    pseudoLines.position.set(
-                        x,  y,  z,
-                    );
-                    grp.add(pseudoLines);
-                    // Animate pseudo lines
-                    animejs({targets:pseudoLines.position,y:[z+2,z,z+2,z],duration:duration,easing,loop:true,delay:getRandomFloat(0,3e3)});
-
-                    // if array is empty
-                    /* if(forMemory.length===0){
-                        forMemory.push([x,y,z])
-                    }else{
-                        let forCounter=0
-                        for(const el of forMemory){// проходимся по массиму с уже обработанными точками
-                            if(el[0]===x&&el[1]===y&&el[2]===z){
-                                //console.log('true detected')
-                            }else{
-                                forCounter++
-                                // находим разницу расстояния между всеми точками К ОДНОЙ и добавляем только те (по идее), которые находятся НЕ близко друг к другу
-                                const distance = new THREE.Vector3(el[0],el[1],el[2]).distanceTo(new THREE.Vector3(x,y,z));
-                                //console.log(distance);
-                                if(distance>5){
-                                    console.log('distance>5 detected');
-                                    // const hgt=getRandomFloat(1,2),
-                                    //         pseudoLines=new THREE.Mesh(
-                                    //         new THREE.CylinderGeometry(.01,.01,hgt,6),
-                                    //         //shaderForThisLine
-                                    //         new THREE.MeshBasicMaterial({
-                                    //             color:0xffffff,
-                                    //             side:THREE.DoubleSide,
-                                    //             clippingPlanes: clipPlanes,
-                                    //             clipIntersection: false
-                                    //         })
-                                    //     );
-                                    // pseudoLines.rotateX(Math.PI/-1.0)
-                                    // pseudoLines.position.set(
-                                    //     x,  y,  z,
-                                    // );
-                                    // grp.add(pseudoLines);
-                    
-                                    // Set the desired quaternion rotation
-                                    //const quaternion = new THREE.Quaternion();
-                                    //quaternion.setFromAxisAngle(new THREE.Vector3(x,y,z).multiplyScalar(2), Math.PI / 2); // Rotate 90 degrees around the y-axis
-        
-                                    // Set the quaternion rotation to the cylinder's rotation property
-                                    //pseudoLines.rotation.setFromQuaternion(quaternion);
-                
-                                    // console.log(pseudoLines);
-                                    // Animate pseudo lines
-                                //    animejs({targets:pseudoLines.position,y:[z+25,z,z+25,z],duration:duration,easing,loop:true,delay:getRandomFloat(0,3e3)});
-                                }
-                            }
-                        }
-                        forMemory.push([x,y,z])
-                        console.log(forCounter); */
-                    // }
-                    //const pseudoLinesClone=pseudoLines.clone()
-                    /* const shaderForThisLine=new THREE.ShaderMaterial({
-                        uniforms: {
-                        color1: { value: new THREE.Color(0xffffff)},
-                        color2: { value: new THREE.Color(0x000000)},
-                        ratio: {value: 1.},
-                        time: {value: 0.},
-                    },
-                        vertexShader: `varying vec2 vUv;
-                    varying vec3 vPosition;
-                    void main () {
-                        vPosition = position;
-                        vUv = uv;
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position.xyz, 1.);
-                    }`,
-                        fragmentShader: `varying vec2 vUv;
-                    uniform vec3 color1;
-                    uniform vec3 color2;
-                    uniform float ratio;
-                    uniform float time;
-                    float cubicPulse(float c, float w, float x){
-                        x = abs(x - c);
-                        if(x>w) return 0.0;
-                        x /= w;
-                        return 1.0 - x*x*(3.0-2.0*x);
-                    }
-                    void main(){
-                        vec2 uv = (vUv - 0.5) * vec2(ratio, 1.);
-                        float alpha = cubicPulse(sin(time),1.,vUv.y*.5);
-                        gl_FragColor = vec4(mix(color1, color2, length(uv)), alpha);
-                    }`,
-                        transparent:true,//opacity: 1,depthWrite:false,
-                        clippingPlanes: clipPlanes,
-                        clipIntersection: false
-                    })
-                    shaderMaterial.push(
-                        shaderForThisLine
-                    ) */
-                    
-                    // animejs({targets:pseudoLines.scale,y:[0,getRandomFloat(1,3)],duration:duration,easing:'easeOutElastic',loop:true,delay:getRandomFloat(.1,5e3)});
-                    // if(i>500)break // JFT
-                }
-                // grp — это анимированные за шлемом линии...
-                grp.rotateX(Math.PI/2)
-                grp.scale.set(.95,.95,.95)
-                grp.position.set(0,0,-.9)
-                sceneGlb.add(grp)
-                // Добавлю лист, чтобы скрыть нижние линии, улитевшие назад
-                const pln=new THREE.Mesh(
-                    new THREE.PlaneGeometry(1.3,1.3),
-                    new THREE.MeshBasicMaterial({color:0x000000})
+                // const positionOfGlassPoints=[];
+                const pseudoLines=new THREE.Mesh(
+                    new THREE.BoxGeometry(.5,.5,.5),
+                    new THREE.MeshBasicMaterial({color:0xff0000,side:THREE.DoubleSide})
                 );
-                pln.rotateX(-2.4)
-                pln.scale.set(20,20,20)
-                pln.position.set(0,0,-1.5)
-                mesh.add(pln)
+                const grp=new THREE.Group()
+                // 1000 < 0
+                // console.log(mesh.geometry.attributes.position.count*3>i);
+                while(mesh.geometry.attributes.position.count*3>i){
+                    // const cloned=pseudoLines.clone()
+                    // cloned.position.set(i++,i++,i++);
+                    // scene.add(cloned)
+                    //const pseudoLinesClone=pseudoLines.clone()
+                    const pseudoLinesClone=new THREE.Mesh(
+                        new THREE.BoxGeometry(.5,.5,.5),
+                        new THREE.MeshBasicMaterial({color:0xff0000,side:THREE.DoubleSide})
+                    );
+                    pseudoLinesClone.position.set(
+                        //new THREE.Vector3(
+                            mesh.geometry.attributes.position.array[i++],
+                            mesh.geometry.attributes.position.array[i++],
+                            mesh.geometry.attributes.position.array[i++],
+                        //)
+                    );
+                    //console.log(i);
+                    // pseudoLinesClone.lookAt(mesh)
+                    grp.add(pseudoLinesClone)
+
+                    //if(i>500)break // JFT
+                    //i++
+                }
+                grp.rotateX(Math.PI/2.3)
+                grp.scale.set(.046,.046,.046)
+                grp.position.set(0,-.44,.09)
+                scene.add(grp)
+
+
+                
+                    
+
+                /* const pointGeometry = new THREE.Geometry();
+                pointGeometry.vertices.push( new THREE.Vector3( 0, 1, 0), new THREE.Vector3( 0, 2, 0), new THREE.Vector3( 0, 3, 0) );
+                            
+                const pointMaterial = new THREE.PointsMaterial( { color: 0x888888 , size: 0.15 } ); ///what to do here
+                
+                pointOnGeo = new THREE.Points( pointGeometry, pointMaterial ); */
+
             }
             // mesh.material.color=new THREE.Color(0x1c1810)
             // mesh.material.envMapIntensity=.8
@@ -544,13 +450,10 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 /////////////   \\\ LESS 2
 //const clock = new THREE.Clock()
 
-//JFT
-//let iiii=0
-// \ JFT
+const tick = () =>
+{
 
-const tick = ()=>{
-
-    // const elapsedTime = clock.getElapsedTime()
+    //const elapsedTime = clock.getElapsedTime()
 
     // Update Orbital Controls
     // controls.update()
@@ -562,20 +465,6 @@ const tick = ()=>{
     window.requestAnimationFrame(tick);
 
     animate()
-
-    // console.log(shaderMaterial);
-
-    //if( /*JFT*/ /* iiii>200 && */ /*JFT*/ shaderMaterial&&shaderMaterial.length>0){
-        //shaderMaterial[0].uniforms.time.value=elapsedTime
-    //    for(const el of shaderMaterial){
-    //        el.uniforms.time.value=elapsedTime
-    //    }
-    //}
-
-    // JFT
-    //iiii++
-    // \ JFT
-
 }
 
 tick()
