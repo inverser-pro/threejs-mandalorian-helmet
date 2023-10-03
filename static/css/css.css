@@ -61,7 +61,7 @@ nav ul li{list-style:none}
 .btnClick{border: 3px solid;border-image-source: linear-gradient(153deg,#4c4c4c,#efefef);border-image-slice: 1;white-space: nowrap;transition:box-shadow .25s,transform .15s;padding: 1rem;font-size: 1.2rem;margin-left: auto;margin-right: auto;}
 
 
-.btn-start-anim{bottom:3rem;right:3rem;width: 3.4rem; height: 3.4rem; background-color: #0b6497;border-radius: 50%;border:0;
+.btn-start-anim{bottom:3rem;right:3rem;width: 3.4rem; height: 3.4rem; background-color: #0b6497;border-radius: 50%;border:0;transition: transform linear .5s;
     padding: 3px 0 3.5px 2px;
     box-shadow: inset 0 2px 2px rgba(0,0,0,.5), inset 0 -1px rgba(255,255,255,.7);
     text-align: center;
@@ -101,3 +101,5 @@ nav ul li{list-style:none}
     90% {transform: rotatey(0)rotatex(0);box-shadow: 0 0 0 0}
     100% {transform: rotatey(360deg)rotatex(0);box-shadow: 0 0 0 0}
 }
+
+.btnCl{transform: scale(0);animation-name:none!important;}

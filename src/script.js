@@ -26,11 +26,13 @@ const sceneData=Object.create({
     // JFT // hdrEnv:'/hdr/kiara_1_dawn_4k.hdr',
     modelFull:'/models/Mandalorean_FULL_with_ani.glb', // FULL Mandalorean 3D model with animation (without helmet)
     spaceShip:'/models/spaceship.glb',
+    spaceshipMando:'/models/spaceshipMando.glb',
 })
 
 // Cache full Mando model (with ani);
 if(window.fetch){
-    fetch(sceneData.modelFull)
+    fetch(sceneData.modelFull);
+    fetch(sceneData.spaceshipMando)
 }
 
 // Objects
@@ -81,7 +83,7 @@ scene.add(pointLight2);
 ALight.position.set(0,10,-5);
 scene.add(ALight); */
 //https://r105.threejsfundamentals.org/threejs/lessons/threejs-fog.html
-scene.fog = new THREE.FogExp2(0x000000,.04);
+scene.fog = new THREE.FogExp2(0x000000,.08);
 
 // Shader material for pseudoLines
 //const shaderMaterial=[]
@@ -403,6 +405,7 @@ loader.load(
                       dur_=1800;
                 if(btn){
                     btn.addEventListener('click',()=>{
+                        btn.classList.add('btnCl');
                         // dissalow scroll on doc
                         d.body.onscroll=()=>{return false;}
                         animationScripts=[{}];
@@ -411,31 +414,40 @@ loader.load(
                         renderer.localClippingEnabled = false;
                         mesh.remove(pln);
                         animejs.timeline()
-                            .add({targets:grp.position,z:18,duration:100})
+                            .add({targets:grp.position,z:18,duration:100,easing})
                             //.add({targets:pointLight2,intensity:5,duration:100})
-                            .add({targets:scene.fog,density:0,duration:600,
-                                /* // JFT
-                                complete:()=>{
-                                    const hdrEquirect = new RGBELoader().load(
-                                        sceneData.hdrEnv,
-                                        () => {
-                                            hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
-                                    
-                                            const sphere=new THREE.Mesh(
-                                                new THREE.IcosahedronGeometry(18,4),
-                                                new THREE.MeshBasicMaterial({
-                                                    map:hdrEquirect,
-                                                    side:THREE.DoubleSide,
-                                                })
-                                            );
-                                            sphere.position.set(0,14,-2)
-                                            scene.add(sphere)
-                                        }
-                                    );
-                                } */
-                            })
                             .add({targets:camera.position,z:8,y:2,duration:400,easing,complete:()=>{
                                 //start full Mando anim
+                                animejs({targets:scene.fog,density:[.04,0],duration:duration*2,easing
+                                    /* // JFT
+                                    complete:()=>{
+                                        const hdrEquirect = new RGBELoader().load(
+                                            sceneData.hdrEnv,
+                                            () => {
+                                                hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
+                                        
+                                                const sphere=new THREE.Mesh(
+                                                    new THREE.IcosahedronGeometry(18,4),
+                                                    new THREE.MeshBasicMaterial({
+                                                        map:hdrEquirect,
+                                                        side:THREE.DoubleSide,
+                                                    })
+                                                );
+                                                sphere.position.set(0,14,-2)
+                                                scene.add(sphere)
+                                            }
+                                        );
+                                    } */
+                                })
+                                loader.load(
+                                    sceneData.spaceshipMando,// Mando spaceship
+                                    glb=>{
+                                        const sceneGlb=glb.scene;
+                                        sceneGlb.position.set(-3,-.5,-45)
+                                        sceneGlb.rotateY(-.5)
+                                        sceneGlb.scale.set(3,3,3)
+                                        scene.add(sceneGlb)
+                                })
                                 loader.load(
                                     sceneData.modelFull,// Mando full
                                     glb=>{
