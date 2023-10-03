@@ -47,6 +47,7 @@ let scrollPercent =0, oldScrollPercent = 0, old2=0,
     percentToScreens=330,
     pl=null,
     matForLight,
+    MESHForLight,
     mixer,
     helmetFor2Anim,//for animation
     animationScripts = [{ start:0, end:0, func:0 }];
@@ -77,6 +78,10 @@ loader.setDRACOLoader(dracoLoader);
 const pointLight2 = new THREE.PointLight(0xffffff, 3);
 pointLight2.position.set(2,3,1);
 scene.add(pointLight2);
+pointLight2.shadow.mapSize.width = 2048;
+pointLight2.shadow.mapSize.height = 2048;
+pointLight2.shadow.camera.near = .1;
+pointLight2.castShadow = true;
 
 
 /* const ALight = new THREE.AmbientLight(0xffffff, 3);
@@ -102,7 +107,8 @@ loader.load(
         //cylForLight.rotateX( -Math.PI / 2 );
         matForLight	= VolumetricMatrial()
         const meshForLight	= new THREE.Mesh( cylForLight, matForLight);
-        meshForLight.position.set(1,2.1,.2)
+        meshForLight.position.set(1,2.1,.2);
+        MESHForLight=meshForLight;
         //meshForLight.lookAt(sceneGlb.position.x+.1,sceneGlb.position.y+.7,sceneGlb.position.z)
         //meshForLight.lookAt(sceneGlb.position.x-.25,sceneGlb.position.y,sceneGlb.position.z)
         matForLight.uniforms.lightColor.value.set(0xffffff)
@@ -190,10 +196,7 @@ loader.load(
         }
         // sceneGlb.children[0].children[0].receiveShadow=true
         // sceneGlb.children[0].children[0].castShadow=true
-
-
                 // обрезаем анимированные линии
-                //
                 renderer.localClippingEnabled = true;
                 // \
                 const clipPlanes = [
@@ -222,7 +225,7 @@ loader.load(
                 // \ JFT
 
         for(const el in sceneGlb.children[0].children){
-            //sceneGlb.children[0].children[el].receiveShadow=true
+            sceneGlb.children[0].children[el].receiveShadow=true
             sceneGlb.children[0].children[el].castShadow=true;
             const mesh = sceneGlb.children[0].children[el];
             /*
@@ -406,8 +409,9 @@ loader.load(
                 if(btn){
                     btn.addEventListener('click',()=>{
                         // Set helmet to default pos/rot
-                        animejs({targets:helmetFor2Anim.rotation,x:-.21,y:0,z:0});
-                        animejs({targets:helmetFor2Anim.position,x:-0,y:-.49,z:0});
+                        animejs({targets:helmetFor2Anim.rotation,x:-.21,y:0,z:0,easing});
+                        animejs({targets:helmetFor2Anim.position,x:-0,y:-.49,z:0,easing});
+                        animejs({targets:MESHForLight.scale,x:0,y:0,z:0,easing,duration:50});
 
                         btn.classList.add('btnCl');
                         // dissalow scroll on doc
@@ -479,14 +483,19 @@ loader.load(
                                         if(metall.children.length>0){
                                             for(const m_ of metall.children){
                                                 if(m_.material){
-                                                    // m_.material.color=new THREE.Color(0xff0000);
                                                     m_.material.envMap = hdrEquirect
                                                     m_.material.envMapIntensity=5
                                                 }
+                                                console.log(m_);
+                                                if(m_.name.includes('03_body')||m_.name.includes('02_armor')){
+                                                    m_.receiveShadow=true
+                                                    m_.castShadow=true;
+                                                }
+                                                //sceneGlb.children[0].children[el].receiveShadow=true
+                                                //sceneGlb.children[0].children[el].castShadow=true;
                                             }
                                         }
                                         for(const el in helmetFor2Anim.children[0].children){
-                                            //sceneGlb.children[0].children[el].receiveShadow=true
                                             const mesh = helmetFor2Anim.children[0].children[el];
                                             /*
                                             New_object_1-5
@@ -496,7 +505,6 @@ loader.load(
                                             New_object_4 — unknown
                                             New_object_5 — glass
                                                 */
-                                            //console.log(mesh.name); // what is it?
                                             if(mesh.name==='New_object_5'){ // Glass
                                                 animejs({targets:mesh.material,roughness:0,metalness:.8,envMapIntensity:.2,color:new THREE.Color(0x000000),duration:1000,easing,complete:()=>{
                                                     mesh.material.color=new THREE.Color(0x000000)
@@ -513,8 +521,6 @@ loader.load(
                                                     mesh.material.metalness=1
                                                     mesh.material.envMapIntensity=5
                                                 }})
-                                                // \ HDR map
-                                
                                             }
                                         }
                                         // Add spaceShip
@@ -528,7 +534,6 @@ loader.load(
                                             }
                                         ) */
                                         // \ Add spaceShip
-
                                     }
                                 )
                                 // \ SFMA
@@ -561,13 +566,6 @@ loader.load(
                     })
                 }
             }
-            // mesh.material.color=new THREE.Color(0x1c1810)
-            // mesh.material.envMapIntensity=.8
-            // mesh.material.envMap = hdrEquirect
-            // mesh.receiveShadow=true
-            // mesh.castShadow=true
-            //sceneGlb.children[0].children[el].castShadow.material=new THREE.Material
-
             //JFT || light & light helper
                 /* const lightPos={x:0,y:0,z:.7}
                 const pointLightJFT = new THREE.PointLight(0xffffff, 1)
@@ -682,12 +680,6 @@ pointLight.position.y = 3
 pointLight.position.z = 4
 scene.add(pointLight) */
 
-/////////////   LESS 2
-/* pointLight.shadow.mapSize.width = 512;
-pointLight.shadow.mapSize.height = 512;
-pointLight.shadow.camera.near = .1;
-pointLight.castShadow = true; */
-/////////////   \\\ LESS 2
 
 const sizes = {
     width: window.innerWidth,
