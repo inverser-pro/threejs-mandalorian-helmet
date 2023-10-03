@@ -405,6 +405,10 @@ loader.load(
                       dur_=1800;
                 if(btn){
                     btn.addEventListener('click',()=>{
+                        // Set helmet to default pos/rot
+                        animejs({targets:helmetFor2Anim.rotation,x:-.21,y:0,z:0});
+                        animejs({targets:helmetFor2Anim.position,x:-0,y:-.49,z:0});
+
                         btn.classList.add('btnCl');
                         // dissalow scroll on doc
                         d.body.onscroll=()=>{return false;}
