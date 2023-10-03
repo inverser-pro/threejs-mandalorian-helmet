@@ -538,7 +538,7 @@ loader.load(
                                     animejs({targets:camera.position,y:9,z:20,duration:dur_,delay:1000,easing})
                                     //setTimeout(()=>{
                                         animejs.timeline()
-                                            .add({targets:helmetFor2Anim.position,y:2,duration:dur_/2,easing,complete:()=>{
+                                            .add({targets:helmetFor2Anim.position,y:6,duration:1600,delay:300,easing,complete:()=>{
                                                 helmetFor2Anim.position.y=8.23;
                                                 helmetFor2Anim.position.z=-3.3;
                                                 helmetFor2Anim.rotation.x=0;
