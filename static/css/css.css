@@ -10,6 +10,9 @@ body{margin:0;padding: 0;font:1.25rem/1.66rem monospace,arial,sans;-webkit-font-
 
 [alt="logo"]{filter: invert(1)}
 
+.pa{position:absolute}
+.pf{position:fixed}
+
 .db{display: block}
 .in{display: inline-block}
 .fx{display: flex}
@@ -56,3 +59,45 @@ nav ul li{list-style:none}
 .bg{background-color: rgb(1,0,0,50%);}
 
 .btnClick{border: 3px solid;border-image-source: linear-gradient(153deg,#4c4c4c,#efefef);border-image-slice: 1;white-space: nowrap;transition:box-shadow .25s,transform .15s;padding: 1rem;font-size: 1.2rem;margin-left: auto;margin-right: auto;}
+
+
+.btn-start-anim{bottom:3rem;right:3rem;width: 3.4rem; height: 3.4rem; background-color: #0b6497;border-radius: 50%;border:0;
+    padding: 3px 0 3.5px 2px;
+    box-shadow: inset 0 2px 2px rgba(0,0,0,.5), inset 0 -1px rgba(255,255,255,.7);
+    text-align: center;
+    animation: e 15s infinite linear;
+    color: #fff;cursor: pointer;transition: transform linear .3s;
+}
+.btn-start-anim:hover{transform: rotatey(0)rotatex(0);box-shadow: 0 0 0 0;animation-name:none!important;}
+
+.btn-start-anim:after,.btn-start-anim:before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    border: 2px solid;
+    border-color: rgba(185,224,255,.9) transparent rgba(185,224,255,.9) transparent;
+    border-radius: 50%;
+    top: -2px;
+    right: -2px;
+    animation: q 15s infinite linear
+}
+
+.btn-start-anim:after {
+    border-color: transparent rgba(0,23,69,.5) transparent rgba(0,23,69,.5);
+    animation: q 15s infinite linear reverse
+}
+
+@keyframes q {
+    0% {transform: rotate(360deg)}
+    100% {transform: rotate(-360deg)}
+}
+
+@keyframes e {
+    0% {transform: rotatey(0)rotatex(-360deg);box-shadow: 0 0 0 0}
+    10% {transform: rotatey(25deg)rotatex(25deg);box-shadow: -3px 3px 0 #29506F,-5px 5px 0 #29506F}
+    90% {transform: rotatey(0)rotatex(0);box-shadow: 0 0 0 0}
+    100% {transform: rotatey(360deg)rotatex(0);box-shadow: 0 0 0 0}
+}

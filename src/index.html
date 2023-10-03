@@ -65,6 +65,11 @@
             </div>
         </section>
     </main>
+
+    <aside>
+        <button class="pf z2 btn btn-start-anim">Don't touch me</button>
+    </aside>
+
     <script>
         (()=>{
             const d=document;
@@ -80,10 +85,7 @@
             }
 
             loadResource(loadRes,'src');
-            loadResource(loadResHref,'href')
-
-            //if(loadRes&&loadRes.length&&loadRes.length>0){loadRes.forEach(e => e.src=e.dataset.src)}
-            //if(loadResHref&&loadResHref.length&&loadResHref.length>0){loadResHref.forEach(e => e.href=e.dataset.href)}
+            loadResource(loadResHref,'href');
         })()
     </script>
 </body>

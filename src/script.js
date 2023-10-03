@@ -23,7 +23,15 @@ const scene = new THREE.Scene()
 const sceneData=Object.create({
     model:'/models/Mandalorean_pseudo_hidden_bg3.glb',
     hdr:'/hdr/softly_gray.hdr', // HDR map
+    // JFT // hdrEnv:'/hdr/kiara_1_dawn_4k.hdr',
+    modelFull:'/models/Mandalorean_FULL_with_ani.glb', // FULL Mandalorean 3D model with animation (without helmet)
+    spaceShip:'/models/spaceship.glb',
 })
+
+// Cache full Mando model (with ani);
+if(window.fetch){
+    fetch(sceneData.modelFull)
+}
 
 // Objects
 /* const geometry = new THREE.TorusGeometry( .7, .2, 16, 100 );
@@ -36,7 +44,10 @@ scene.add(sphere) */
 let scrollPercent =0, oldScrollPercent = 0, old2=0,
     percentToScreens=330,
     pl=null,
-    matForLight;
+    matForLight,
+    mixer,
+    helmetFor2Anim,//for animation
+    animationScripts = [{ start:0, end:0, func:0 }];
 if(window.innerWidth<1025){//MOBILE
     // camera.position.set(0, 0, 3.2);
     percentToScreens=400
@@ -46,7 +57,7 @@ const loader = new GLTFLoader(),
       d=document,
       a=e=>d.querySelectorAll(e),
       s=e=>(d.querySelector(e))?d.querySelector(e):null,
-      DEBUG=true,
+      // DEBUG=true,
       easing='linear',
       duration=2000,
       screenConst=parseInt(window.getComputedStyle(d.body).height)/ 45 //percentToScreens;//100/7 ( 7 = screens.length);
@@ -61,14 +72,24 @@ const hdrEquirect = new RGBELoader().load(
 dracoLoader.setDecoderPath('/js/libs/draco-new/'); // use a full url path
 loader.setDRACOLoader(dracoLoader);
 
+const pointLight2 = new THREE.PointLight(0xffffff, 3);
+pointLight2.position.set(2,3,1);
+scene.add(pointLight2);
+
+
+/* const ALight = new THREE.AmbientLight(0xffffff, 3);
+ALight.position.set(0,10,-5);
+scene.add(ALight); */
+//https://r105.threejsfundamentals.org/threejs/lessons/threejs-fog.html
+scene.fog = new THREE.FogExp2(0x000000,.04);
+
 // Shader material for pseudoLines
 //const shaderMaterial=[]
 // \ Shader material for pseudoLines
 loader.load(
     sceneData.model,// Manda
     gltf=>{
-        const sceneGlb=gltf.scene,
-              animationScripts = [{ start:0, end:0, func:0 }];
+        const sceneGlb=gltf.scene;
         sceneGlb.scale.set(.05,.05,.05)
 
         // Add volumetric light
@@ -94,8 +115,9 @@ loader.load(
         // \ Add volumetric light
         scene.add(sceneGlb)
 
-        sceneGlb.rotation.set(-.21,0,0)
-        sceneGlb.position.set(0,-.49,0)
+        sceneGlb.rotation.set(-.21,0,0);
+        sceneGlb.position.set(0,-.49,0);
+        helmetFor2Anim=sceneGlb;
         //animejs({targets:sceneGlb.position,z:[-4,0],duration,delay:2e3,easing})
         const tmp2scr=screenConst,// 2 screen
               tmp3scr=screenConst*1.8,// 3 screen
@@ -182,18 +204,20 @@ loader.load(
                     //new THREE.Plane( new THREE.Vector3( .8, 0, -.8 ),1),
                     //new THREE.Plane( new THREE.Vector3( -.8, 0, -.8 ),1),
                 ];
-                const helpers = new THREE.Group();
-                helpers.add( new THREE.PlaneHelper( clipPlanes[0], 5, 0xff0000 ) );
-                helpers.add( new THREE.PlaneHelper( clipPlanes[1], 5, 0xcccccc ) );
-                helpers.add( new THREE.PlaneHelper( clipPlanes[2], 5, 0x0086ff ) );
+                // JFT
+                //    const helpers = new THREE.Group();
+                //    helpers.add( new THREE.PlaneHelper( clipPlanes[0], 5, 0xff0000 ) );
+                //    helpers.add( new THREE.PlaneHelper( clipPlanes[1], 5, 0xcccccc ) );
+                //    helpers.add( new THREE.PlaneHelper( clipPlanes[2], 5, 0x0086ff ) );
                 //helpers.add( new THREE.PlaneHelper( clipPlanes[3], 5, 0xffff00 ) );
                 //helpers.add( new THREE.PlaneHelper( clipPlanes[4], 5, 0x00ffff ) );
                 //helpers.add( new THREE.PlaneHelper( clipPlanes[5], 5, 0x00ff00 ) );
                 //helpers.add( new THREE.PlaneHelper( clipPlanes[6], 5, 0xffff00 ) );
                 //helpers.add( new THREE.PlaneHelper( clipPlanes[7], 5, 0x00ffff ) );
                 //console.log(helpers);
-                helpers.visible = false;
-                scene.add( helpers );
+                //    helpers.visible = false;
+                //    scene.add( helpers );
+                // \ JFT
 
         for(const el in sceneGlb.children[0].children){
             //sceneGlb.children[0].children[el].receiveShadow=true
@@ -251,16 +275,16 @@ loader.load(
                     
                     // рабочий код
                     const hgt=getRandomFloat(1,2),
-                            pseudoLines=new THREE.Mesh(
-                            new THREE.CylinderGeometry(.01,.01,hgt,6),
-                            //shaderForThisLine
-                            new THREE.MeshBasicMaterial({
-                                color:0xffffff,
-                                side:THREE.DoubleSide,
-                                clippingPlanes: clipPlanes,
-                                clipIntersection: false
-                            })
-                        );
+                      pseudoLines=new THREE.Mesh(
+                        new THREE.CylinderGeometry(.01,.01,hgt,6),
+                        //shaderForThisLine
+                        new THREE.MeshBasicMaterial({
+                            color:0xffffff,
+                            side:THREE.DoubleSide,
+                            clippingPlanes: clipPlanes,
+                            clipIntersection: false
+                        })
+                    );
                     pseudoLines.rotateX(Math.PI/-1.0)
                     pseudoLines.position.set(
                         x,  y,  z,
@@ -268,7 +292,6 @@ loader.load(
                     grp.add(pseudoLines);
                     // Animate pseudo lines
                     animejs({targets:pseudoLines.position,y:[z+2,z,z+2,z],duration:duration,easing,loop:true,delay:getRandomFloat(0,3e3)});
-
                     // if array is empty
                     /* if(forMemory.length===0){
                         forMemory.push([x,y,z])
@@ -373,6 +396,154 @@ loader.load(
                 pln.scale.set(20,20,20)
                 pln.position.set(0,0,-1.5)
                 mesh.add(pln)
+
+                // Animate when click Secret button
+                let ifClicked=false;
+                const btn=s('.btn-start-anim'),
+                      dur_=1800;
+                if(btn){
+                    btn.addEventListener('click',()=>{
+                        // dissalow scroll on doc
+                        d.body.onscroll=()=>{return false;}
+                        animationScripts=[{}];
+                        if(ifClicked)return false;
+                        if(grp)sceneGlb.remove(grp);
+                        renderer.localClippingEnabled = false;
+                        mesh.remove(pln);
+                        animejs.timeline()
+                            .add({targets:grp.position,z:18,duration:100})
+                            //.add({targets:pointLight2,intensity:5,duration:100})
+                            .add({targets:scene.fog,density:0,duration:600,
+                                /* // JFT
+                                complete:()=>{
+                                    const hdrEquirect = new RGBELoader().load(
+                                        sceneData.hdrEnv,
+                                        () => {
+                                            hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
+                                    
+                                            const sphere=new THREE.Mesh(
+                                                new THREE.IcosahedronGeometry(18,4),
+                                                new THREE.MeshBasicMaterial({
+                                                    map:hdrEquirect,
+                                                    side:THREE.DoubleSide,
+                                                })
+                                            );
+                                            sphere.position.set(0,14,-2)
+                                            scene.add(sphere)
+                                        }
+                                    );
+                                } */
+                            })
+                            .add({targets:camera.position,z:8,y:2,duration:400,easing,complete:()=>{
+                                //start full Mando anim
+                                loader.load(
+                                    sceneData.modelFull,// Mando full
+                                    glb=>{
+                                        const sceneGlb=glb.scene;
+                                        sceneGlb.position.set(0,-.5,-10)
+                                        scene.add(sceneGlb)
+                                        sceneGlb.scale.set(6, 6, 6)
+                                        mixer = new THREE.AnimationMixer(sceneGlb);
+                                  /*! // */    //  mixer.timeScale=8;// DEF: 8
+                                        mixer.clipAction((glb).animations[0]).play();
+                                        // установим параметры, чтобы анимация останавливалась после полного проигрывания на последнем кадре
+                                        mixer._actions[0].clampWhenFinished=true;
+                                        mixer._actions[0].loop = THREE.LoopOnce;
+                                        // проверим воспроизводится ли на данный момент 0 (первая) анимация (ходьба)
+                                        // если уже НЕТ, то запускаем вторую анимацию
+                                        let tt=setInterval(()=>{
+                                            if(!mixer._actions[0].isRunning()){
+                                                clearInterval(tt);
+                                                tt=null;
+                                                mixer.clipAction((glb).animations[1]).play();
+                                            }
+                                        },500);
+                                        const metall=sceneGlb.children[0]; // and his childrens
+                                        console.log(metall.children)
+                                        if(metall.children.length>0){
+                                            for(const m_ of metall.children){
+                                                if(m_.material){
+                                                    // m_.material.color=new THREE.Color(0xff0000);
+                                                    m_.material.envMap = hdrEquirect
+                                                    m_.material.envMapIntensity=5
+                                                }
+                                            }
+                                        }
+                                        for(const el in helmetFor2Anim.children[0].children){
+                                            //sceneGlb.children[0].children[el].receiveShadow=true
+                                            const mesh = helmetFor2Anim.children[0].children[el];
+                                            /*
+                                            New_object_1-5
+                                            New_object_1 — main helmet
+                                            New_object_2 — что-то на ушах (где и накладки)
+                                            New_object_3 — накладки на ушах
+                                            New_object_4 — unknown
+                                            New_object_5 — glass
+                                                */
+                                            //console.log(mesh.name); // what is it?
+                                            if(mesh.name==='New_object_5'){ // Glass
+                                                animejs({targets:mesh.material,roughness:0,metalness:.8,envMapIntensity:.2,color:new THREE.Color(0x000000),duration:1000,easing,complete:()=>{
+                                                    mesh.material.color=new THREE.Color(0x000000)
+                                                    mesh.material.roughness=0
+                                                    mesh.material.metalness=.8
+                                                    mesh.material.envMapIntensity=.2
+                                                }})
+                                
+                                            }
+                                            if(mesh.name!=='New_object_5'){ // Other
+                                                animejs({targets:mesh.material,roughness:0,metalness:1,envMapIntensity:5,color:new THREE.Color(0x2a2a2a),duration:1000,easing,complete:()=>{
+                                                    mesh.material.color=new THREE.Color(0x2a2a2a)
+                                                    mesh.material.roughness=0
+                                                    mesh.material.metalness=1
+                                                    mesh.material.envMapIntensity=5
+                                                }})
+                                                // \ HDR map
+                                
+                                            }
+                                        }
+                                        // Add spaceShip
+                                        /* loader.load(
+                                            sceneData.spaceShip,// Manda full
+                                            glb=>{
+                                                const sceneGlb=glb.scene;
+                                                sceneGlb.position.set(0,-.5,0)
+                                                scene.add(sceneGlb)
+                                                sceneGlb.scale.set(6, 6, 6)
+                                            }
+                                        ) */
+                                        // \ Add spaceShip
+
+                                    }
+                                )
+                                // \ SFMA
+                                setTimeout(()=>{
+                                    animejs({targets:pointLight2.position,y:12,duration:dur_,easing})
+                                    animejs({targets:pointLight2,intesity:5,duration:dur_,easing})
+                                    animejs({targets:camera.position,y:9,z:20,duration:dur_,delay:1000,easing})
+                                    //setTimeout(()=>{
+                                        animejs.timeline()
+                                            .add({targets:helmetFor2Anim.position,y:2,duration:dur_/2,easing,complete:()=>{
+                                                helmetFor2Anim.position.y=8.23;
+                                                helmetFor2Anim.position.z=-3.3;
+                                                helmetFor2Anim.rotation.x=0;
+                                                animejs({targets:helmetFor2Anim.rotation,y:[
+                                                    //8.23,8.2,8.23,8.2,8.23,8.2,8.23,8.2,8.23
+                                                    0,.005,0,-.005,0,.005,0,-.005,0,.005,0,-.005,0
+                                                ],duration:duration*4,easing,loop:true});
+                                                // animejs({targets:helmetFor2Anim.position,y:8.23,duration:dur_/2.5,easing});
+                                                // animejs({targets:helmetFor2Anim.position,z:-3.3,duration:dur_/2.5,easing});
+                                                // animejs({targets:helmetFor2Anim.rotation,x:0,duration:dur_/2.5,easing});
+                                            }})
+                                            
+                                    //},0)
+                                    //.add({targets:helmetFor2Anim.position,y:9,z:20,duration,easing})
+                                },7400)
+
+                            }});
+                            if(!ifClicked)ifClicked=true
+                        
+                    })
+                }
             }
             // mesh.material.color=new THREE.Color(0x1c1810)
             // mesh.material.envMapIntensity=.8
@@ -495,12 +666,6 @@ pointLight.position.y = 3
 pointLight.position.z = 4
 scene.add(pointLight) */
 
-const pointLight2 = new THREE.PointLight(0xffffff, 3)
-pointLight2.position.setx = 2
-pointLight2.position.y = 3
-pointLight2.position.z = 1
-scene.add(pointLight2)
-
 /////////////   LESS 2
 /* pointLight.shadow.mapSize.width = 512;
 pointLight.shadow.mapSize.height = 512;
@@ -542,7 +707,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 /////////////   \\\ LESS 2
-//const clock = new THREE.Clock()
+const clock = new THREE.Clock()
 
 //JFT
 //let iiii=0
@@ -575,6 +740,8 @@ const tick = ()=>{
     // JFT
     //iiii++
     // \ JFT
+
+    if (mixer) mixer.update(clock.getDelta());
 
 }
 
