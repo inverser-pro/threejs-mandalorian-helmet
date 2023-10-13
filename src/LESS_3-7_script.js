@@ -5,51 +5,34 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 import animejs from 'animejs/lib/anime.es.js'
-import * as dat from 'dat.gui'
+//import * as dat from 'dat.gui'
 
 // HDR map
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
-import {VolumetricMatrial} from './threex.volumetricspotlightmaterial';
-import { Reflector } from 'three/examples/jsm/objects/Reflector';
+import {VolumetricMatrial} from './threex.volumetricspotlightmaterial'
 
-import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer';
-import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass';
-import {ShaderPass} from 'three/examples/jsm/postprocessing/ShaderPass';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
-import { DotScreenShader } from './DotScreenShder';
-
-"use strict";
 // Debug
-const gui = new dat.GUI(),
-    sceneParam=Object.create({
-        exposure: .8,
-        postprocessing:{
-            threshold: .2,
-            strength: .5,
-            radius: 1,
-        },
-        isClicked: false,
-    }),
+//const gui = new dat.GUI()
+"use strict";
 // Canvas
-    canvas = document.querySelector('canvas.webgl'),
+const canvas = document.querySelector('canvas.webgl')
 
 // Scene
-    scene = new THREE.Scene(),
+const scene = new THREE.Scene()
 
-    sceneData=Object.create({
-        model:'/models/Mandalorean_pseudo_hidden_bg3.glb',
-        hdr:'/hdr/softly_gray.hdr', // HDR map
-        // JFT // hdrEnv:'/hdr/kiara_1_dawn_4k.hdr',
-        hdrForShader:'/hdr/kiara_1_dawn_4k.hdr', // HDR map softly_gray_for_light
-        modelFull:'/models/Mandalorean_FULL_with_ani.glb', // FULL Mandalorean 3D model with animation (without helmet)
-        //spaceShip:'/models/spaceship.glb',
-        //spaceshipMando:'/models/spaceshipMando.glb',
-    });
+const sceneData=Object.create({
+    model:'/models/Mandalorean_pseudo_hidden_bg3.glb',
+    hdr:'/hdr/softly_gray.hdr', // HDR map
+    // JFT // hdrEnv:'/hdr/kiara_1_dawn_4k.hdr',
+    modelFull:'/models/Mandalorean_FULL_with_ani.glb', // FULL Mandalorean 3D model with animation (without helmet)
+    spaceShip:'/models/spaceship.glb',
+    spaceshipMando:'/models/spaceshipMando.glb',
+})
 
 // Cache full Mando model (with ani);
 if(window.fetch){
     fetch(sceneData.modelFull);
-    fetch(sceneData.hdrForShader)
+    fetch(sceneData.spaceshipMando)
 }
 
 // Objects
@@ -67,9 +50,7 @@ let scrollPercent =0, oldScrollPercent = 0, old2=0,
     MESHForLight,
     mixer,
     helmetFor2Anim,//for animation
-    animationScripts = [{ start:0, end:0, func:0 }],
-    OBJ // for shader material
-    ;
+    animationScripts = [{ start:0, end:0, func:0 }];
 if(window.innerWidth<1025){//MOBILE
     // camera.position.set(0, 0, 3.2);
     percentToScreens=400
@@ -85,106 +66,10 @@ const loader = new GLTFLoader(),
       screenConst=parseInt(window.getComputedStyle(d.body).height)/ 45 //percentToScreens;//100/7 ( 7 = screens.length);
       // console.log(screenConst);
 function lerp(x, y, a) {return (1 - a) * x + a * y}
-
-
-
-const sizes = {
-    width: window.innerWidth * window.devicePixelRatio,
-    height: window.innerHeight * window.devicePixelRatio
-}
-
-window.addEventListener('resize', () =>{
-    sizes.width = window.innerWidth * window.devicePixelRatio;
-    sizes.height = window.innerHeight * window.devicePixelRatio;
-
-    camera.aspect = sizes.width / sizes.height;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(sizes.width, sizes.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    if(effDots&&effDots.uniforms)effDots.uniforms.uSize.value = new THREE.Vector2(
-        sizes.width,
-        sizes.height
-    )
-});
-
-// Добавим управление мышью для цвета
-document.addEventListener('pointermove',e=>{
-    const clientX = e.clientX,
-          x = ((sizes.width-clientX)/sizes.width);
-    if(effDots&&effDots.uniforms) animejs({targets:effDots.uniforms.progress,value:x,duration:300,easing})
-},false);
-
-const camera = new THREE.PerspectiveCamera(30, sizes.width / sizes.height, .1, 100)
-camera.position.set(0,1,5);
-scene.add(camera)
-
-// Controls
-const controls = new OrbitControls(camera, canvas)
-// controls.enableDamping = true
-
-const renderer = new THREE.WebGLRenderer({
-    canvas, antialias: true,
-})
-renderer.setSize(sizes.width, sizes.height)
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-
-// Добавим настройки, которыми можно управлять
-gui.add(sceneParam,'exposure',0,3,.01).onChange(()=>{
-    renderer.toneMappingExposure=sceneParam.exposure;
-});
-gui.add(sceneParam.postprocessing,'threshold',0,3,.01).onChange(()=>{
-    bloomPass.threshold=sceneParam.postprocessing.threshold;
-});
-gui.add(sceneParam.postprocessing,'strength',0,3,.01).onChange(()=>{
-    bloomPass.strength=sceneParam.postprocessing.strength;
-});
-gui.add(sceneParam.postprocessing,'radius',0,3,.01).onChange(()=>{
-    bloomPass.radius=sceneParam.postprocessing.radius;
-});
-
-// Добавим пост-обработку
-const renderScene = new RenderPass( scene, camera );
-
-const bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
-bloomPass.threshold = sceneParam.postprocessing.threshold;
-bloomPass.strength = sceneParam.postprocessing.strength;
-bloomPass.radius = sceneParam.postprocessing.radius;
-
-const composer = new EffectComposer( renderer );
-composer.addPass( renderScene );
-composer.addPass( bloomPass );
-
-// add dots fron src folder
-const effDots = new ShaderPass(DotScreenShader);
-composer.addPass(effDots);
-
-
-
-/* /////////////   LESS 2
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
- */
-// Rendere tone
-renderer.toneMapping= THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure= sceneParam.exposure;
-
-renderer.physicallyCorrectLights = true;
-
-const pmGenerator = new THREE.PMREMGenerator(renderer);
-pmGenerator.compileEquirectangularShader();
-
 // HDR map
-let hdrEquirect = new RGBELoader().load(
-// let hdrEquirect = new THREE.TextureLoader().load(
-    sceneData.hdrForShader,
-    // '/imgs/03.jpg',
-    texture => {
-        hdrEquirect = pmGenerator.fromEquirectangular(texture).texture;
-        //hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
-        pmGenerator.dispose();
-    }
+const hdrEquirect = new RGBELoader().load(
+    sceneData.hdr,
+    () => hdrEquirect.mapping = THREE.EquirectangularReflectionMapping
 );
 // \ HDR map
 dracoLoader.setDecoderPath('/js/libs/draco-new/'); // use a full url path
@@ -193,10 +78,10 @@ loader.setDRACOLoader(dracoLoader);
 const pointLight2 = new THREE.PointLight(0xffffff, 3);
 pointLight2.position.set(2,3,1);
 scene.add(pointLight2);
-// pointLight2.shadow.mapSize.width = 2048;
-// pointLight2.shadow.mapSize.height = 2048;
-// pointLight2.shadow.camera.near = .1;
-// pointLight2.castShadow = true;
+pointLight2.shadow.mapSize.width = 2048;
+pointLight2.shadow.mapSize.height = 2048;
+pointLight2.shadow.camera.near = .1;
+pointLight2.castShadow = true;
 
 
 /* const ALight = new THREE.AmbientLight(0xffffff, 3);
@@ -212,8 +97,7 @@ loader.load(
     sceneData.model,// Manda
     gltf=>{
         const sceneGlb=gltf.scene;
-        // sceneGlb.scale.set(.05,.05,.05)
-        sceneGlb.scale.set(0,0,0)
+        sceneGlb.scale.set(.05,.05,.05)
 
         // Add volumetric light
         const cylForLight=new THREE.CylinderGeometry( .01, 2.7, 10, 64, 80, true);
@@ -242,8 +126,7 @@ loader.load(
         sceneGlb.rotation.set(-.21,0,0);
         sceneGlb.position.set(0,-.49,0);
         helmetFor2Anim=sceneGlb;
-        animejs({targets:sceneGlb.position,z:[-20,0],duration:duration,delay:800,easing:'easeOutBack'})
-        animejs({targets:sceneGlb.scale,x:.05,y:.05,z:.05,duration,easing})
+        //animejs({targets:sceneGlb.position,z:[-4,0],duration,delay:2e3,easing})
         const tmp2scr=screenConst,// 2 screen
               tmp3scr=screenConst*1.8,// 3 screen
               tmp4scr=screenConst*2.8,// 4 screen
@@ -342,8 +225,8 @@ loader.load(
                 // \ JFT
 
         for(const el in sceneGlb.children[0].children){
-            // sceneGlb.children[0].children[el].receiveShadow=true
-            // sceneGlb.children[0].children[el].castShadow=true;
+            sceneGlb.children[0].children[el].receiveShadow=true
+            sceneGlb.children[0].children[el].castShadow=true;
             const mesh = sceneGlb.children[0].children[el];
             /*
             New_object_1-5
@@ -398,7 +281,7 @@ loader.load(
                     // рабочий код
                     const hgt=getRandomFloat(1,2),
                       pseudoLines=new THREE.Mesh(
-                        new THREE.PlaneGeometry(.04,hgt,1,6),
+                        new THREE.CylinderGeometry(.01,.01,hgt,6),
                         //shaderForThisLine
                         new THREE.MeshBasicMaterial({
                             color:0xffffff,
@@ -412,12 +295,8 @@ loader.load(
                         x,  y,  z,
                     );
                     grp.add(pseudoLines);
-                    // перемещает центр геометрии
-                    pseudoLines.geometry.translate(0,1,0);
                     // Animate pseudo lines
-                    const delay=getRandomFloat(0,3e3);
-                    animejs({targets:pseudoLines.position,y:[z+2,z,z+2,z],duration:duration,easing,loop:true,delay});
-                    animejs({targets:pseudoLines.scale,y:[0,5],duration:500,loop:true,easing,delay});
+                    animejs({targets:pseudoLines.position,y:[z+2,z,z+2,z],duration:duration,easing,loop:true,delay:getRandomFloat(0,3e3)});
                     // if array is empty
                     /* if(forMemory.length===0){
                         forMemory.push([x,y,z])
@@ -568,7 +447,7 @@ loader.load(
                                         );
                                     } */
                                 })
-                                /* loader.load(
+                                loader.load(
                                     sceneData.spaceshipMando,// Mando spaceship
                                     glb=>{
                                         const sceneGlb=glb.scene;
@@ -576,7 +455,7 @@ loader.load(
                                         sceneGlb.rotateY(-.5)
                                         sceneGlb.scale.set(3,3,3)
                                         scene.add(sceneGlb)
-                                }) */
+                                })
                                 loader.load(
                                     sceneData.modelFull,// Mando full
                                     glb=>{
@@ -600,113 +479,17 @@ loader.load(
                                             }
                                         },500);
                                         const metall=sceneGlb.children[0]; // and his childrens
-                                        // console.log(metall.children)
-
-                                        const groundMirror = new Reflector( new THREE.PlaneGeometry(30,30), {
-                                            // clipBias: .001,
-                                            textureWidth: sizes.width,
-                                            textureHeight: sizes.height,
-                                            color: 0x057091,
-                                            // multisample:.1
-                                        } );
-                                        groundMirror.position.y = -0.5;
-                                        groundMirror.rotateX( - Math.PI / 2 );
-                                        groundMirror.scale.set(0,0,0,)
-                                        scene.add( groundMirror );
-                                        animejs({targets:groundMirror.scale,x:1,y:1,z:1,duration,easing})
-
-
+                                        console.log(metall.children)
                                         if(metall.children.length>0){
-
-                                            // Материал для Мандо и шлема после нажатия кнопки
-                                            const material = new THREE.MeshPhysicalMaterial({
-                                                roughness: 0,
-                                                // transmission: 0,
-                                                //thickness: 0,
-                                                metalness: .5,
-                                                //color:0x2c2c2c,
-                                                color:0x666666,
-                                                envMap: hdrEquirect,
-                                                envMapIntensity:.8,
-                                            });
-                                            material.onBeforeCompile = shader => {
-                                                console.log(shader);
-                            
-                                                shader.uniforms.uTime = {value: 0};
-                            
-                                                shader.fragmentShader= `
-                                                uniform float uTime;
-                                                mat4 rotationMatrix(vec3 axis, float angle) {
-                                                    axis = normalize(axis);
-                                                    float s = sin(angle);
-                                                    float c = cos(angle);
-                                                    float oc = 1.0 - c;
-                                                    
-                                                    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-                                                                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-                                                                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-                                                                0.0,                                0.0,                                0.0,                                1.0);
-                                                }
-                                                vec3 rotate(vec3 v, vec3 axis, float angle) {
-                                                    mat4 m = rotationMatrix(axis, angle);
-                                                    return (m * vec4(v, 1.0)).xyz;
-                                                }
-                                                ` + shader.fragmentShader;
-                            
-                                                shader.fragmentShader = shader.fragmentShader.replace('#include <envmap_physical_pars_fragment>',
-                                                `
-                                                #if defined ( USE_ENVMAP )
-                                                vec3 getIBLIrradiance( const in vec3 normal ) {
-                                                    #ifdef ENVMAP_TYPE_CUBE_UV
-                                                        vec3 worldNormal = inverseTransformDirection( normal, viewMatrix );
-                                                        vec4 envMapColor = textureCubeUV( envMap, worldNormal, 1.0 );
-                                                        return PI * envMapColor.rgb * envMapIntensity;
-                                                    #else
-                                                        return vec3( 0.0 );
-                                                    #endif
-                                                }
-                                            
-                                                vec3 getIBLRadiance( const in vec3 viewDir, const in vec3 normal, const in float roughness ) {
-                                                    #ifdef ENVMAP_TYPE_CUBE_UV
-                                                        vec3 reflectVec = reflect( - viewDir, normal );
-                                                        // Mixing the reflection with the normal is more accurate and keeps rough objects from gathering light from behind their tangent plane.
-                                                        reflectVec = normalize( mix( reflectVec, normal, roughness * roughness) );
-                                                        reflectVec = inverseTransformDirection( reflectVec, viewMatrix );
-                            
-                                                        reflectVec = rotate(reflectVec, vec3(0,1,0), uTime * 0.05);
-                            
-                                                        vec4 envMapColor = textureCubeUV( envMap, reflectVec, roughness );
-                                                        return envMapColor.rgb * envMapIntensity;
-                                                    #else
-                                                        return vec3( 0.0 );
-                                                    #endif
-                                                }
-                                                #endif
-                            
-                                                `);
-                            
-                                                material.userData.shader=shader;
-                                            }
-
                                             for(const m_ of metall.children){
                                                 if(m_.material){
                                                     m_.material.envMap = hdrEquirect
                                                     m_.material.envMapIntensity=5
                                                 }
                                                 console.log(m_);
-                                                // if(m_.name.includes('03_body')||m_.name.includes('02_armor')){
-                                                    // m_.receiveShadow=true
-                                                    // m_.castShadow=true;
-                                                // }
-                                                if(m_.name.includes('02_armor')||m_.name.includes('02_armor')){
-
-                                                    m_.material=material;
-                            
-                                                    OBJ=m_.material;
-
-                                                    //m_.receiveShadow=true
-                                                    //m_.castShadow=true;
-                                                    m_.material=OBJ
+                                                if(m_.name.includes('03_body')||m_.name.includes('02_armor')){
+                                                    m_.receiveShadow=true
+                                                    m_.castShadow=true;
                                                 }
                                                 //sceneGlb.children[0].children[el].receiveShadow=true
                                                 //sceneGlb.children[0].children[el].castShadow=true;
@@ -723,22 +506,21 @@ loader.load(
                                             New_object_5 — glass
                                                 */
                                             if(mesh.name==='New_object_5'){ // Glass
-                                                animejs({targets:mesh.material,/* roughness:0,metalness:.8,envMapIntensity:.2, */color:new THREE.Color(0x000000),duration:1000,easing,complete:()=>{
-                                                    mesh.material=OBJ.clone()
+                                                animejs({targets:mesh.material,roughness:0,metalness:.8,envMapIntensity:.2,color:new THREE.Color(0x000000),duration:1000,easing,complete:()=>{
                                                     mesh.material.color=new THREE.Color(0x000000)
                                                     mesh.material.roughness=0
-                                                    mesh.material.metalness=0
+                                                    mesh.material.metalness=.8
+                                                    mesh.material.envMapIntensity=.2
                                                 }})
 
                                             }
                                             if(mesh.name!=='New_object_5'){ // Other
-                                                // animejs({targets:mesh.material,roughness:0,metalness:1,envMapIntensity:5,color:new THREE.Color(0x2a2a2a),duration:1000,easing,complete:()=>{
-                                                //     mesh.material.color=new THREE.Color(0x2a2a2a)
-                                                //     mesh.material.roughness=0
-                                                //     mesh.material.metalness=1
-                                                //     mesh.material.envMapIntensity=5
-                                                // }})
-                                                mesh.material=OBJ
+                                                animejs({targets:mesh.material,roughness:0,metalness:1,envMapIntensity:5,color:new THREE.Color(0x2a2a2a),duration:1000,easing,complete:()=>{
+                                                    mesh.material.color=new THREE.Color(0x2a2a2a)
+                                                    mesh.material.roughness=0
+                                                    mesh.material.metalness=1
+                                                    mesh.material.envMapIntensity=5
+                                                }})
                                             }
                                         }
                                         // Add spaceShip
@@ -861,9 +643,9 @@ loader.load(
             // calculate pointer position in normalized device coordinates
             // (-1 to +1) for both components
             const x = ((event.clientX / window.innerWidth)*2-1) / 4;
-            animejs({targets:sceneGlb.rotation,z:x,duration,easing:'easeOutBack'})
+            animejs({targets:sceneGlb.rotation,y:x,duration:duration/2,easing})
         }
-        window.addEventListener('pointermove',onPointerMove,false)
+    //    window.addEventListener('mousemove',onPointerMove,false)
     //    document.addEventListener('mouseleave',()=>{
     //        animejs({targets:sceneGlb.rotation,y:0,duration:duration/2,easing})
     //    })
@@ -899,6 +681,39 @@ pointLight.position.z = 4
 scene.add(pointLight) */
 
 
+const sizes = {
+    width: window.innerWidth,
+    height: window.innerHeight
+}
+
+window.addEventListener('resize', () =>{
+    sizes.width = window.innerWidth
+    sizes.height = window.innerHeight
+
+    camera.aspect = sizes.width / sizes.height
+    camera.updateProjectionMatrix()
+
+    renderer.setSize(sizes.width, sizes.height)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+})
+
+const camera = new THREE.PerspectiveCamera(30, sizes.width / sizes.height, .1, 100)
+camera.position.set(0,1,5);
+scene.add(camera)
+
+// Controls
+const controls = new OrbitControls(camera, canvas)
+// controls.enableDamping = true
+
+const renderer = new THREE.WebGLRenderer({
+    canvas, antialias: true,
+})
+renderer.setSize(sizes.width, sizes.height)
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+/////////////   LESS 2
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 /////////////   \\\ LESS 2
 const clock = new THREE.Clock()
 
@@ -914,7 +729,7 @@ const tick = ()=>{
     // controls.update()
 
     // Render
-    composer.render(scene, camera)
+    renderer.render(scene, camera)
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick);
@@ -935,9 +750,6 @@ const tick = ()=>{
     // \ JFT
 
     if (mixer) mixer.update(clock.getDelta());
-    // OBJ = это материал для металла
-    if(OBJ&&OBJ.userData)OBJ.userData.shader.uniforms.uTime.value += +.05;
-    if(effDots&&effDots.uniforms)effDots.uniforms.uTime.value += +.05;
 
 }
 

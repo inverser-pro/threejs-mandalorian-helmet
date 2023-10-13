@@ -12,3 +12,13 @@ html,body
     left: 0;
     outline: none;
 }
+
+.dg{z-index: 10!important;}
+
+.dg .c {
+    display: flex;
+}
+
+.dg .c .slider {
+    flex: 1 0 auto;
+}
