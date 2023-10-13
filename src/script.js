@@ -761,7 +761,7 @@ loader.load(
                                     animejs({targets:camera.position,y:9,z:20,duration:dur_,delay:1000,easing})
                                     //setTimeout(()=>{
                                         animejs.timeline()
-                                            .add({targets:helmetFor2Anim.position,y:6,duration:1600,delay:300,easing,complete:()=>{
+                                            .add({targets:helmetFor2Anim.position,y:8,duration:2000,delay:200,easing,complete:()=>{
                                                 helmetFor2Anim.position.y=8.23;
                                                 helmetFor2Anim.position.z=-3.3;
                                                 helmetFor2Anim.rotation.x=0;
@@ -860,7 +860,7 @@ loader.load(
         function onPointerMove( event ) {
             // calculate pointer position in normalized device coordinates
             // (-1 to +1) for both components
-            const x = ((event.clientX / window.innerWidth)*2-1) / 4;
+            const x = ((event.clientX / window.innerWidth)*2-1) / 8;
             animejs({targets:sceneGlb.rotation,z:x,duration,easing:'easeOutBack'})
         }
         window.addEventListener('pointermove',onPointerMove,false)
